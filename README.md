@@ -97,26 +97,22 @@ The build files will be in the `dist` directory.
 2. Go to [Netlify](https://netlify.com)
 3. Drag the `dist` folder to the deploy area
 
-### Setting up FaunaDB (Optional)
+### Persistent Storage
 
-For persistent cross-device storage, you can set up FaunaDB:
+The app automatically uses **Netlify Blobs** for persistent storage when deployed to Netlify. This provides:
 
-1. Go to [FaunaDB](https://fauna.com) and create a free account
-2. Create a new database called `showgrandad`
-3. Create a collection called `photos`
-4. Create a server key in the FaunaDB dashboard
-5. In your Netlify dashboard, go to Site settings → Environment variables
-6. Add a new variable: `FAUNADB_SECRET` with your FaunaDB server key
-7. Redeploy your site
-
-**Note**: The app works without FaunaDB using fallback storage, but FaunaDB provides true persistence.
+- **Cross-device synchronization**: Photos uploaded on any device appear on all devices
+- **Persistence across deployments**: Photos won't be lost when you redeploy the site
+- **No setup required**: Works automatically when deployed to Netlify
+- **Fallback support**: Uses in-memory storage during local development
 
 ## Cross-Device Photo Sharing
 
-**Server-Side Storage**: Photos are now stored on the server using Netlify Functions with FaunaDB. This means:
+**Netlify Blobs Storage**: Photos are stored using Netlify's built-in Blobs service. This means:
 - Photos uploaded on any device will appear on all devices
 - True cross-device synchronization for the entire family
-- Secure server-side storage with localStorage fallback
+- Secure server-side storage with automatic fallback
+- No external database setup required
 
 **For Family Use**: 
 - Family members can upload photos from any device
@@ -125,13 +121,13 @@ For persistent cross-device storage, you can set up FaunaDB:
 
 ## Security Note
 
-This application currently uses localStorage for data persistence and a simple password check. For production use with sensitive family photos, consider:
+This application uses Netlify Blobs for persistent storage and includes basic authentication. For production use with sensitive family photos, consider:
 
-1. Using Netlify Functions for secure authentication
-2. Implementing a proper database (like Netlify's Identity + FaunaDB)
-3. Adding image optimization and secure cloud storage
-4. Using environment variables for passwords
-5. Implementing cross-device photo synchronization
+1. Using Netlify Identity for secure authentication
+2. Adding image optimization and compression
+3. Using environment variables for passwords
+4. Implementing user roles and permissions
+5. Adding backup and recovery features
 
 ## Customization
 
@@ -153,9 +149,10 @@ The app uses Tailwind CSS with a custom color scheme inspired by Laravel Filamen
 
 ### Adding Features
 
-- Photos are stored in localStorage (in a real app, use a database)
-- Authentication is client-side only (in a real app, use server-side auth)
-- No image optimization (in a real app, optimize images)
+- Photos are stored using Netlify Blobs for persistence
+- Authentication is client-side only (consider Netlify Identity for enhanced security)
+- No image optimization (consider adding compression for better performance)
+- Delete functionality is available but not exposed in the UI
 
 ## License
 

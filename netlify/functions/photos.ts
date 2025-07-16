@@ -1,14 +1,7 @@
 import { Handler } from '@netlify/functions';
-import faunadb from 'faunadb';
+import { getStore } from '@netlify/blobs';
 
-const q = faunadb.query;
-
-// Initialize FaunaDB client
-const client = new faunadb.Client({
-  secret: process.env.FAUNADB_SECRET || 'fallback-secret',
-});
-
-// Fallback to in-memory storage if FaunaDB is not available
+// Fallback to in-memory storage if Netlify Blobs is not available
 let photos: any[] = [];
 let useFallback = false;
 
@@ -33,25 +26,19 @@ export const handler: Handler = async (event, context) => {
     if (event.httpMethod === 'GET') {
       // Get all photos
       try {
-        if (!useFallback && process.env.FAUNADB_SECRET) {
-          const result = await client.query(
-            q.Map(
-              q.Paginate(q.Documents(q.Collection('photos'))),
-              q.Lambda(['ref'], q.Get(q.Var('ref')))
-            )
-          );
-          const faunaPhotos = (result as any).data.map((photo: any) => ({
-            id: photo.ref.id,
-            ...photo.data,
-          }));
+        if (!useFallback) {
+          const store = getStore('photos');
+          const photosData = await store.get('photos-list');
+          const storedPhotos = photosData ? JSON.parse(photosData) : [];
+          
           return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(faunaPhotos),
+            body: JSON.stringify(storedPhotos),
           };
         }
       } catch (error) {
-        console.warn('FaunaDB not available, using fallback storage');
+        console.warn('Netlify Blobs not available, using fallback storage');
         useFallback = true;
       }
       
@@ -69,26 +56,27 @@ export const handler: Handler = async (event, context) => {
       if (action === 'upload' || !action) {
         // Add new photo
         try {
-          if (!useFallback && process.env.FAUNADB_SECRET) {
-            const result = await client.query(
-              q.Create(q.Collection('photos'), {
-                data: photo,
-              })
-            );
+          if (!useFallback) {
+            const store = getStore('photos');
             
-            const savedPhoto = {
-              id: (result as any).ref.id,
-              ...(result as any).data,
-            };
+            // Get existing photos
+            const existingPhotosData = await store.get('photos-list');
+            const existingPhotos = existingPhotosData ? JSON.parse(existingPhotosData) : [];
+            
+            // Add new photo to the beginning
+            existingPhotos.unshift(photo);
+            
+            // Save back to store
+            await store.set('photos-list', JSON.stringify(existingPhotos));
             
             return {
               statusCode: 200,
               headers,
-              body: JSON.stringify({ success: true, photo: savedPhoto }),
+              body: JSON.stringify({ success: true, photo }),
             };
           }
         } catch (error) {
-          console.warn('FaunaDB not available, using fallback storage');
+          console.warn('Netlify Blobs not available, using fallback storage');
           useFallback = true;
         }
         
@@ -104,10 +92,18 @@ export const handler: Handler = async (event, context) => {
       if (action === 'delete') {
         // Delete photo by ID
         try {
-          if (!useFallback && process.env.FAUNADB_SECRET) {
-            await client.query(
-              q.Delete(q.Ref(q.Collection('photos'), photo.id))
-            );
+          if (!useFallback) {
+            const store = getStore('photos');
+            
+            // Get existing photos
+            const existingPhotosData = await store.get('photos-list');
+            const existingPhotos = existingPhotosData ? JSON.parse(existingPhotosData) : [];
+            
+            // Filter out the photo to delete
+            const updatedPhotos = existingPhotos.filter((p: any) => p.id !== photo.id);
+            
+            // Save back to store
+            await store.set('photos-list', JSON.stringify(updatedPhotos));
             
             return {
               statusCode: 200,
@@ -116,7 +112,7 @@ export const handler: Handler = async (event, context) => {
             };
           }
         } catch (error) {
-          console.warn('FaunaDB not available, using fallback storage');
+          console.warn('Netlify Blobs not available, using fallback storage');
           useFallback = true;
         }
         
