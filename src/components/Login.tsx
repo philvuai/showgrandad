@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface LoginProps {
   onLogin: (username: string, password: string) => Promise<boolean>;
   error: string | null;
   isLoading: boolean;
+  onBack?: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading, onBack }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -97,6 +98,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin, error, isLoading }) => {
             </div>
           </div>
         </form>
+        
+        {onBack && (
+          <div className="text-center">
+            <button
+              onClick={onBack}
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeftIcon className="h-4 w-4 mr-1" />
+              Back to login options
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

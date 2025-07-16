@@ -51,12 +51,20 @@ A password-protected family photo sharing website built for grandad, so the whol
 
 4. Open your browser to `http://localhost:3000` (or the port shown in terminal)
 
-### Default Login
+### Login Options
 
-- **Username**: Any name (e.g., "John", "Mary", etc.)
-- **Password**: `GrandadWebb!123`
+**For Grandad (Easy Login):**
+- Click "I'm Grandad" 
+- Enter PIN: `1234`
+- Large buttons and simple interface
+- "Keep me logged in" option
 
-> **Note**: The password can be changed in `src/hooks/useAuth.ts`
+**For Family Members:**
+- Click "I'm Family"
+- Username: Any name (e.g., "John", "Mary", etc.)
+- Password: `GrandadWebb!123`
+
+> **Note**: Login credentials can be changed in `src/hooks/useAuth.ts`
 
 ## Building for Production
 
@@ -121,12 +129,16 @@ This application currently uses localStorage for data persistence and a simple p
 
 ## Customization
 
-### Changing the Password
+### Changing Login Credentials
 
-Edit `src/hooks/useAuth.ts` and update the `FAMILY_PASSWORD` constant:
+Edit `src/hooks/useAuth.ts` and update the credentials:
 
 ```typescript
+// For family members
 const FAMILY_PASSWORD = 'your-new-password';
+
+// For grandad (simple 4-6 digit PIN)
+const GRANDAD_PIN = '1234';
 ```
 
 ### Styling

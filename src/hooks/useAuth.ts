@@ -28,11 +28,17 @@ export const useAuth = (): AuthState & {
     setError(null);
 
     try {
-      // TODO: Replace with actual Netlify Function call
-      // For now, we'll use a simple password check
-      const FAMILY_PASSWORD = 'GrandadWebb!123'; // This should be stored securely
+      // Authentication credentials
+      const FAMILY_PASSWORD = 'GrandadWebb!123'; // For family members
+      const GRANDAD_PIN = '1234'; // Simple PIN for grandad
       
-      if (password === FAMILY_PASSWORD) {
+      // Check if it's grandad with PIN or family member with password
+      const isValidLogin = (
+        (username.toLowerCase() === 'grandad' && password === GRANDAD_PIN) ||
+        (username.toLowerCase() !== 'grandad' && password === FAMILY_PASSWORD)
+      );
+      
+      if (isValidLogin) {
         const userData: User = {
           id: Date.now().toString(),
           username,
@@ -44,7 +50,11 @@ export const useAuth = (): AuthState & {
         setIsLoading(false);
         return true;
       } else {
-        setError('Invalid password');
+        if (username.toLowerCase() === 'grandad') {
+          setError('Invalid PIN. Please try again.');
+        } else {
+          setError('Invalid password. Please try again.');
+        }
         setIsLoading(false);
         return false;
       }

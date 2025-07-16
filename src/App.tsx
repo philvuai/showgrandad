@@ -1,5 +1,5 @@
 import { useAuth } from './hooks/useAuth';
-import { Login } from './components/Login';
+import { LoginSelector } from './components/LoginSelector';
 import { Dashboard } from './pages/Dashboard';
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
   }
 
   if (!user) {
-    return <Login onLogin={login} error={error} isLoading={isLoading} />;
+    return <LoginSelector onLogin={login} error={error} isLoading={isLoading} />;
   }
 
   return <Dashboard user={user} onLogout={logout} />;
