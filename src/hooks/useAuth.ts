@@ -30,7 +30,7 @@ export const useAuth = (): AuthState & {
     try {
       // Authentication credentials
       const FAMILY_PASSWORD = 'GrandadWebb!123'; // For family members
-      const GRANDAD_PIN = '1234'; // Simple PIN for grandad
+      const GRANDAD_PIN = '6656'; // Simple PIN for grandad
       
       // Check if it's grandad with PIN or family member with password
       const isValidLogin = (

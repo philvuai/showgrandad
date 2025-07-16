@@ -57,7 +57,7 @@ A password-protected family photo sharing website built for grandad, so the whol
 
 **For Grandad (View-Only Experience):**
 - Click "I'm Grandad" 
-- Enter PIN: `1234`
+- Enter PIN: `6656`
 - Large buttons and simple interface
 - "Keep me logged in" option
 - **View photos only** - no upload functionality
@@ -140,7 +140,7 @@ Edit `src/hooks/useAuth.ts` and update the credentials:
 const FAMILY_PASSWORD = 'your-new-password';
 
 // For grandad (simple 4-6 digit PIN)
-const GRANDAD_PIN = '1234';
+const GRANDAD_PIN = '6656';
 ```
 
 ### Styling
