@@ -4,9 +4,11 @@ A password-protected family photo sharing website built for grandad, so the whol
 
 ## Features
 
-- **Password Protection**: Simple family password authentication
-- **Photo Upload**: Upload photos from phone or desktop with drag-and-drop support
-- **Photo Descriptions**: Add descriptions to photos to tell grandad what's happening
+- **Dual Login System**: Separate login experiences for grandad and family members
+- **Grandad-Friendly**: Simple PIN login with large buttons and view-only interface
+- **Family Upload**: Full photo upload functionality with descriptions
+- **Cross-Device Sync**: Photos sync across all devices and family members
+- **Password Protection**: Secure authentication for both user types
 - **Gallery View**: Beautiful responsive gallery to browse all family photos
 - **Mobile Friendly**: Works great on phones, tablets, and desktops
 - **Laravel Filament Style**: Clean, modern admin panel design
@@ -53,16 +55,20 @@ A password-protected family photo sharing website built for grandad, so the whol
 
 ### Login Options
 
-**For Grandad (Easy Login):**
+**For Grandad (View-Only Experience):**
 - Click "I'm Grandad" 
 - Enter PIN: `1234`
 - Large buttons and simple interface
 - "Keep me logged in" option
+- **View photos only** - no upload functionality
+- Clean, distraction-free interface
 
-**For Family Members:**
+**For Family Members (Full Access):**
 - Click "I'm Family"
 - Username: Any name (e.g., "John", "Mary", etc.)
 - Password: `GrandadWebb!123`
+- **Upload photos** with descriptions
+- **View all photos** shared with grandad
 
 > **Note**: Login credentials can be changed in `src/hooks/useAuth.ts`
 

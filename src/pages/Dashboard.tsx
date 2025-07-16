@@ -106,14 +106,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     }
   };
 
+  const isGrandad = user.username.toLowerCase() === 'grandad';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header user={user} onLogout={onLogout} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
-          <PhotoUpload onUpload={handlePhotoUpload} isUploading={isUploading} />
-          <PhotoGallery photos={photos} />
+          {isGrandad && (
+            <div className="card text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome, Grandad!</h2>
+              <p className="text-lg text-gray-600">
+                Here are all the photos your family has shared with you
+              </p>
+            </div>
+          )}
+          
+          {!isGrandad && (
+            <PhotoUpload onUpload={handlePhotoUpload} isUploading={isUploading} />
+          )}
+          
+          <PhotoGallery photos={photos} isGrandad={isGrandad} />
         </div>
       </main>
     </div>
