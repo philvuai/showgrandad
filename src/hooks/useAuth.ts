@@ -11,13 +11,13 @@ export const useAuth = (): AuthState & {
 
   useEffect(() => {
     // Check if user is already authenticated
-    const storedUser = localStorage.getItem('showgrandad_user');
+    const storedUser = localStorage.getItem('instagrandad_user');
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
         setUser(userData);
       } catch (e) {
-        localStorage.removeItem('showgrandad_user');
+        localStorage.removeItem('instagrandad_user');
       }
     }
     setIsLoading(false);
@@ -46,7 +46,7 @@ export const useAuth = (): AuthState & {
         };
         
         setUser(userData);
-        localStorage.setItem('showgrandad_user', JSON.stringify(userData));
+        localStorage.setItem('instagrandad_user', JSON.stringify(userData));
         setIsLoading(false);
         return true;
       } else {
@@ -67,7 +67,7 @@ export const useAuth = (): AuthState & {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('showgrandad_user');
+    localStorage.removeItem('instagrandad_user');
   };
 
   return {

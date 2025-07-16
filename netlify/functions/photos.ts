@@ -14,7 +14,7 @@ const deploymentContext = {
 
 // Use a consistent store name that persists across deployments
 const SITE_ID = process.env.NETLIFY_SITE_ID || 'local';
-const STORE_NAME = `showgrandad-${SITE_ID}`;
+const STORE_NAME = `instagrandad-${SITE_ID}`;
 const PHOTOS_KEY = 'family-photos-list';
 
 export const handler: Handler = async (event, context) => {

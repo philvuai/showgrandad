@@ -1,5 +1,5 @@
 {
-  "name": "showgrandad",
+  "name": "instagrandad",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/philvuai/showgrandad.git"
+    "url": "git+https://github.com/philvuai/instagrandad.git"
   },
   "keywords": [
     "family",
@@ -21,9 +21,9 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/philvuai/showgrandad/issues"
+    "url": "https://github.com/philvuai/instagrandad/issues"
   },
-  "homepage": "https://github.com/philvuai/showgrandad#readme",
+  "homepage": "https://github.com/philvuai/instagrandad#readme",
   "description": "A password-protected family photo sharing website for grandad",
   "dependencies": {
     "@headlessui/react": "^2.2.4",

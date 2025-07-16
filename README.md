@@ -1,4 +1,4 @@
-# ShowGrandad - Family Photo Gallery
+# Instagrandad - Family Photo Gallery
 
 A password-protected family photo sharing website built for grandad, so the whole family can upload images and he can see what's happening in the world.
 
@@ -32,8 +32,8 @@ A password-protected family photo sharing website built for grandad, so the whol
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/philvuai/showgrandad.git
-   cd showgrandad
+   git clone https://github.com/philvuai/instagrandad.git
+   cd instagrandad
    ```
 
 2. Install dependencies:

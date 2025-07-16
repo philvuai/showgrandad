@@ -16,7 +16,7 @@ export const api = {
     }
 
     // Fallback to localStorage
-    const localPhotos = localStorage.getItem('showgrandad_photos');
+    const localPhotos = localStorage.getItem('instagrandad_photos');
     return localPhotos ? JSON.parse(localPhotos) : [];
   },
 
@@ -57,7 +57,7 @@ export const api = {
         // Fallback to localStorage
         const existingPhotos = await this.getPhotos();
         const updatedPhotos = [newPhoto, ...existingPhotos];
-        localStorage.setItem('showgrandad_photos', JSON.stringify(updatedPhotos));
+        localStorage.setItem('instagrandad_photos', JSON.stringify(updatedPhotos));
         resolve(newPhoto);
       };
 
