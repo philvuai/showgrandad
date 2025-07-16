@@ -6,6 +6,13 @@ const SITE_ID = process.env.NETLIFY_SITE_ID || 'local';
 const STORE_NAME = `instagrandad-${SITE_ID}`;
 const PHOTOS_KEY = 'family-photos-list';
 
+// Initialize store - let Netlify handle the configuration automatically
+const getPhotoStore = () => {
+  // In production, Netlify should automatically provide the necessary configuration
+  // Use the simple store name and let the environment handle the rest
+  return getStore(STORE_NAME);
+};
+
 export const handler: Handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -13,6 +20,15 @@ export const handler: Handler = async (event, context) => {
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Content-Type': 'application/json',
   };
+
+  // Debug: Log all environment variables
+  console.log('Available environment variables:');
+  console.log('NETLIFY_SITE_ID:', process.env.NETLIFY_SITE_ID);
+  console.log('NETLIFY_AUTH_TOKEN:', process.env.NETLIFY_AUTH_TOKEN ? 'SET' : 'NOT SET');
+  console.log('NETLIFY_DEPLOY_ID:', process.env.NETLIFY_DEPLOY_ID);
+  console.log('NETLIFY_DEPLOY_URL:', process.env.NETLIFY_DEPLOY_URL);
+  console.log('SITE_ID variable:', SITE_ID);
+  console.log('STORE_NAME:', STORE_NAME);
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === 'OPTIONS') {
@@ -27,7 +43,7 @@ export const handler: Handler = async (event, context) => {
     if (event.httpMethod === 'GET') {
       // Get all photos
       try {
-        const store = getStore(STORE_NAME);
+        const store = getPhotoStore();
         const photosData = await store.get(PHOTOS_KEY);
         const storedPhotos = photosData ? JSON.parse(photosData) : [];
         
@@ -61,7 +77,7 @@ export const handler: Handler = async (event, context) => {
       if (action === 'upload' || !action) {
         // Add new photo
         try {
-          const store = getStore(STORE_NAME);
+          const store = getPhotoStore();
           
           // Get existing photos
           const existingPhotosData = await store.get(PHOTOS_KEY);
@@ -102,7 +118,7 @@ export const handler: Handler = async (event, context) => {
       if (action === 'delete') {
         // Delete photo by ID
         try {
-          const store = getStore(STORE_NAME);
+          const store = getPhotoStore();
           
           // Get existing photos
           const existingPhotosData = await store.get(PHOTOS_KEY);
