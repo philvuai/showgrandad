@@ -24,24 +24,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       if (response.ok) {
         const serverPhotos = await response.json();
         setPhotos(serverPhotos);
-        
-        // Also save to localStorage as backup
-        localStorage.setItem('instagrandad_photos', JSON.stringify(serverPhotos));
         return;
       }
     } catch (error) {
-      console.warn('Could not load from server, using localStorage');
-    }
-
-    // Fallback to localStorage
-    const savedPhotos = localStorage.getItem('instagrandad_photos');
-    if (savedPhotos) {
-      try {
-        const parsedPhotos = JSON.parse(savedPhotos);
-        setPhotos(parsedPhotos);
-      } catch (e) {
-        console.error('Error loading photos:', e);
-      }
+      console.error('Could not load from server', error);
     }
   };
 
@@ -81,19 +67,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             // Add to local state
             const updatedPhotos = [uploadedPhoto, ...photos];
             setPhotos(updatedPhotos);
-            
-            // Also save to localStorage as backup
-            localStorage.setItem('instagrandad_photos', JSON.stringify(updatedPhotos));
           } else {
             throw new Error('Failed to upload to server');
           }
         } catch (serverError) {
-          console.warn('Could not upload to server, saving locally:', serverError);
-          
-          // Fallback to localStorage
-          const updatedPhotos = [newPhoto, ...photos];
-          setPhotos(updatedPhotos);
-          localStorage.setItem('instagrandad_photos', JSON.stringify(updatedPhotos));
+          console.error('Could not upload to server', serverError);
         }
         
         setIsUploading(false);
