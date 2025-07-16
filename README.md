@@ -43,8 +43,13 @@ A password-protected family photo sharing website built for grandad, so the whol
    ```bash
    npm run dev
    ```
+   
+   Or with Netlify Functions support:
+   ```bash
+   npm run dev:netlify
+   ```
 
-4. Open your browser to `http://localhost:3000`
+4. Open your browser to `http://localhost:3000` (or the port shown in terminal)
 
 ### Default Login
 
@@ -78,6 +83,32 @@ The build files will be in the `dist` directory.
 2. Go to [Netlify](https://netlify.com)
 3. Drag the `dist` folder to the deploy area
 
+### Setting up FaunaDB (Optional)
+
+For persistent cross-device storage, you can set up FaunaDB:
+
+1. Go to [FaunaDB](https://fauna.com) and create a free account
+2. Create a new database called `showgrandad`
+3. Create a collection called `photos`
+4. Create a server key in the FaunaDB dashboard
+5. In your Netlify dashboard, go to Site settings → Environment variables
+6. Add a new variable: `FAUNADB_SECRET` with your FaunaDB server key
+7. Redeploy your site
+
+**Note**: The app works without FaunaDB using fallback storage, but FaunaDB provides true persistence.
+
+## Cross-Device Photo Sharing
+
+**Server-Side Storage**: Photos are now stored on the server using Netlify Functions with FaunaDB. This means:
+- Photos uploaded on any device will appear on all devices
+- True cross-device synchronization for the entire family
+- Secure server-side storage with localStorage fallback
+
+**For Family Use**: 
+- Family members can upload photos from any device
+- Grandad will see all photos from all family members
+- Photos are automatically synced across phones, tablets, and computers
+
 ## Security Note
 
 This application currently uses localStorage for data persistence and a simple password check. For production use with sensitive family photos, consider:
@@ -86,6 +117,7 @@ This application currently uses localStorage for data persistence and a simple p
 2. Implementing a proper database (like Netlify's Identity + FaunaDB)
 3. Adding image optimization and secure cloud storage
 4. Using environment variables for passwords
+5. Implementing cross-device photo synchronization
 
 ## Customization
 

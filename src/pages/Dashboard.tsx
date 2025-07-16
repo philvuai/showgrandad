@@ -14,7 +14,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    // Load photos from localStorage on component mount
+    loadPhotos();
+  }, []);
+
+  const loadPhotos = async () => {
+    try {
+      // Load from Netlify Functions API
+      const response = await fetch('/.netlify/functions/photos');
+      if (response.ok) {
+        const serverPhotos = await response.json();
+        setPhotos(serverPhotos);
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('showgrandad_photos', JSON.stringify(serverPhotos));
+        return;
+      }
+    } catch (error) {
+      console.warn('Could not load from server, using localStorage');
+    }
+
+    // Fallback to localStorage
     const savedPhotos = localStorage.getItem('showgrandad_photos');
     if (savedPhotos) {
       try {
@@ -24,7 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         console.error('Error loading photos:', e);
       }
     }
-  }, []);
+  };
 
   const handlePhotoUpload = async (upload: PhotoUploadType) => {
     setIsUploading(true);
@@ -32,7 +51,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     try {
       // Create a data URL for the image
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
         
         const newPhoto: Photo = {
@@ -45,11 +64,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           thumbnailUrl: imageUrl, // In a real app, you'd generate a thumbnail
         };
         
-        const updatedPhotos = [newPhoto, ...photos];
-        setPhotos(updatedPhotos);
-        
-        // Save to localStorage
-        localStorage.setItem('showgrandad_photos', JSON.stringify(updatedPhotos));
+        try {
+          // Upload to server
+          const response = await fetch('/.netlify/functions/photos', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ photo: newPhoto, action: 'upload' }),
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            const uploadedPhoto = result.photo;
+            
+            // Add to local state
+            const updatedPhotos = [uploadedPhoto, ...photos];
+            setPhotos(updatedPhotos);
+            
+            // Also save to localStorage as backup
+            localStorage.setItem('showgrandad_photos', JSON.stringify(updatedPhotos));
+          } else {
+            throw new Error('Failed to upload to server');
+          }
+        } catch (serverError) {
+          console.warn('Could not upload to server, saving locally:', serverError);
+          
+          // Fallback to localStorage
+          const updatedPhotos = [newPhoto, ...photos];
+          setPhotos(updatedPhotos);
+          localStorage.setItem('showgrandad_photos', JSON.stringify(updatedPhotos));
+        }
         
         setIsUploading(false);
       };
