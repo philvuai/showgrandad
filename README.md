@@ -49,9 +49,9 @@ A password-protected family photo sharing website built for grandad, so the whol
 ### Default Login
 
 - **Username**: Any name (e.g., "John", "Mary", etc.)
-- **Password**: `grandad123`
+- **Password**: `GrandadWebb!123`
 
-> **Note**: In production, you should change the password in `src/hooks/useAuth.ts`
+> **Note**: The password can be changed in `src/hooks/useAuth.ts`
 
 ## Building for Production
 

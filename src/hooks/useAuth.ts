@@ -30,7 +30,7 @@ export const useAuth = (): AuthState & {
     try {
       // TODO: Replace with actual Netlify Function call
       // For now, we'll use a simple password check
-      const FAMILY_PASSWORD = 'grandad123'; // This should be stored securely
+      const FAMILY_PASSWORD = 'GrandadWebb!123'; // This should be stored securely
       
       if (password === FAMILY_PASSWORD) {
         const userData: User = {
