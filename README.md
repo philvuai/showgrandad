@@ -154,6 +154,21 @@ The app uses Tailwind CSS with a custom color scheme inspired by Laravel Filamen
 - No image optimization (consider adding compression for better performance)
 - Delete functionality is available but not exposed in the UI
 
+## Troubleshooting
+
+### Photos Disappearing After Deployment
+
+If photos disappear after redeployment, it's likely related to the storage setup:
+
+1. **Check Netlify Blobs**: Make sure you're deployed to Netlify (not just running locally)
+2. **View Function Logs**: In Netlify dashboard, go to Functions → View logs to see storage activity
+3. **Test Storage**: Visit `https://your-site.netlify.app/.netlify/functions/test-storage` to verify storage is working
+4. **Site Context**: Photos are stored per-site, so different Netlify sites will have separate photo storage
+
+### Local Development
+
+During local development with `npm run dev:netlify`, photos will use fallback storage and won't persist. This is normal - persistent storage only works when deployed to Netlify.
+
 ## License
 
 ISC License

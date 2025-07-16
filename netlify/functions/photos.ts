@@ -5,6 +5,18 @@ import { getStore } from '@netlify/blobs';
 let photos: any[] = [];
 let useFallback = false;
 
+// Add deployment context info
+const deploymentContext = {
+  deployId: process.env.NETLIFY_DEPLOY_ID || 'unknown',
+  siteId: process.env.NETLIFY_SITE_ID || 'unknown',
+  env: process.env.NODE_ENV || 'unknown',
+};
+
+// Use a consistent store name that persists across deployments
+const SITE_ID = process.env.NETLIFY_SITE_ID || 'local';
+const STORE_NAME = `showgrandad-${SITE_ID}`;
+const PHOTOS_KEY = 'family-photos-list';
+
 export const handler: Handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -27,9 +39,11 @@ export const handler: Handler = async (event, context) => {
       // Get all photos
       try {
         if (!useFallback) {
-          const store = getStore('photos');
-          const photosData = await store.get('photos-list');
+          const store = getStore(STORE_NAME);
+          const photosData = await store.get(PHOTOS_KEY);
           const storedPhotos = photosData ? JSON.parse(photosData) : [];
+          
+          console.log(`Retrieved ${storedPhotos.length} photos from Netlify Blobs`);
           
           return {
             statusCode: 200,
@@ -38,7 +52,7 @@ export const handler: Handler = async (event, context) => {
           };
         }
       } catch (error) {
-        console.warn('Netlify Blobs not available, using fallback storage');
+        console.warn('Netlify Blobs not available, using fallback storage:', error);
         useFallback = true;
       }
       
@@ -57,17 +71,19 @@ export const handler: Handler = async (event, context) => {
         // Add new photo
         try {
           if (!useFallback) {
-            const store = getStore('photos');
+            const store = getStore(STORE_NAME);
             
             // Get existing photos
-            const existingPhotosData = await store.get('photos-list');
+            const existingPhotosData = await store.get(PHOTOS_KEY);
             const existingPhotos = existingPhotosData ? JSON.parse(existingPhotosData) : [];
             
             // Add new photo to the beginning
             existingPhotos.unshift(photo);
             
             // Save back to store
-            await store.set('photos-list', JSON.stringify(existingPhotos));
+            await store.set(PHOTOS_KEY, JSON.stringify(existingPhotos));
+            
+            console.log(`Saved photo to Netlify Blobs. Total photos: ${existingPhotos.length}`);
             
             return {
               statusCode: 200,
@@ -76,7 +92,7 @@ export const handler: Handler = async (event, context) => {
             };
           }
         } catch (error) {
-          console.warn('Netlify Blobs not available, using fallback storage');
+          console.warn('Netlify Blobs not available, using fallback storage:', error);
           useFallback = true;
         }
         
@@ -93,17 +109,19 @@ export const handler: Handler = async (event, context) => {
         // Delete photo by ID
         try {
           if (!useFallback) {
-            const store = getStore('photos');
+            const store = getStore(STORE_NAME);
             
             // Get existing photos
-            const existingPhotosData = await store.get('photos-list');
+            const existingPhotosData = await store.get(PHOTOS_KEY);
             const existingPhotos = existingPhotosData ? JSON.parse(existingPhotosData) : [];
             
             // Filter out the photo to delete
             const updatedPhotos = existingPhotos.filter((p: any) => p.id !== photo.id);
             
             // Save back to store
-            await store.set('photos-list', JSON.stringify(updatedPhotos));
+            await store.set(PHOTOS_KEY, JSON.stringify(updatedPhotos));
+            
+            console.log(`Deleted photo from Netlify Blobs. Remaining photos: ${updatedPhotos.length}`);
             
             return {
               statusCode: 200,
@@ -112,7 +130,7 @@ export const handler: Handler = async (event, context) => {
             };
           }
         } catch (error) {
-          console.warn('Netlify Blobs not available, using fallback storage');
+          console.warn('Netlify Blobs not available, using fallback storage:', error);
           useFallback = true;
         }
         
