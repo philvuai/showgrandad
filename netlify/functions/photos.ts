@@ -129,7 +129,28 @@ export const handler: Handler = async (event, context) => {
     }
 
     if (event.httpMethod === 'POST') {
-      const { photo, action } = JSON.parse(event.body || '{}');
+      let photo, action;
+      
+      try {
+        const body = JSON.parse(event.body || '{}');
+        photo = body.photo;
+        action = body.action;
+      } catch (parseError) {
+        console.error('Error parsing request body:', parseError);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid request body' }),
+        };
+      }
+      
+      if (!photo) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Photo data is required' }),
+        };
+      }
       
       if (action === 'upload' || !action) {
         // Add new photo

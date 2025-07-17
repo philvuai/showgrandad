@@ -33,13 +33,20 @@ export const api = {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ photo: newPhoto }),
+            body: JSON.stringify({ photo: newPhoto, action: 'upload' }),
           });
 
           if (response.ok) {
             resolve(newPhoto);
           } else {
-            throw new Error('Failed to upload photo');
+            let errorMessage = 'Failed to upload photo';
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              // If we can't parse error response, use default message
+            }
+            throw new Error(`${errorMessage} (${response.status})`);
           }
         } catch (error) {
           reject(error);
