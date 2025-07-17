@@ -176,18 +176,13 @@ export const handler: Handler = async (event, context) => {
           };
         } catch (error) {
           console.error('Error accessing Netlify Blobs for upload:', error);
-          console.log('Environment variables:', {
-            NETLIFY_SITE_ID: process.env.NETLIFY_SITE_ID,
-            NETLIFY_DEPLOY_ID: process.env.NETLIFY_DEPLOY_ID,
-            NODE_ENV: process.env.NODE_ENV
-          });
           
           return {
             statusCode: 500,
             headers,
             body: JSON.stringify({ 
               error: 'Photo storage is currently unavailable. Please try again later.',
-              details: error.message 
+              details: error.message
             }),
           };
         }
