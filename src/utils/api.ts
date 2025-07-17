@@ -1,23 +1,14 @@
-import { Photo, PhotoUpload } from '../types';
+import { Photo, PhotoUpload, PhotosResponse } from '../types';
 
 const API_BASE = '/.netlify/functions';
 
 export const api = {
-  async getPhotos(): Promise<Photo[]> {
-    try {
-      // Try to get from server first
-      const response = await fetch(`${API_BASE}/photos`);
-      if (response.ok) {
-        const serverPhotos = await response.json();
-        return serverPhotos;
-      }
-    } catch (error) {
-      console.warn('Server not available, falling back to localStorage');
+  async getPhotos(page: number = 1, limit: number = 12): Promise<PhotosResponse> {
+    const response = await fetch(`${API_BASE}/photos?page=${page}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch photos');
     }
-
-    // Fallback to localStorage
-    const localPhotos = localStorage.getItem('instagrandad_photos');
-    return localPhotos ? JSON.parse(localPhotos) : [];
+    return response.json();
   },
 
   async uploadPhoto(upload: PhotoUpload, username: string): Promise<Photo> {
@@ -37,7 +28,6 @@ export const api = {
         };
 
         try {
-          // Try to save to server first
           const response = await fetch(`${API_BASE}/photos`, {
             method: 'POST',
             headers: {
@@ -48,17 +38,12 @@ export const api = {
 
           if (response.ok) {
             resolve(newPhoto);
-            return;
+          } else {
+            throw new Error('Failed to upload photo');
           }
         } catch (error) {
-          console.warn('Server not available, saving to localStorage');
+          reject(error);
         }
-
-        // Fallback to localStorage
-        const existingPhotos = await this.getPhotos();
-        const updatedPhotos = [newPhoto, ...existingPhotos];
-        localStorage.setItem('instagrandad_photos', JSON.stringify(updatedPhotos));
-        resolve(newPhoto);
       };
 
       reader.onerror = () => reject(new Error('Failed to read file'));

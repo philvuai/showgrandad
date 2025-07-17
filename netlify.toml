@@ -11,6 +11,16 @@
   to = "/index.html"
   status = 200
 
+[[headers]]
+  for = "/.netlify/functions/photo/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 [dev]
   command = "npm run dev"
   port = 3000

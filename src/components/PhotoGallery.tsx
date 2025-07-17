@@ -1,14 +1,37 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { CalendarIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Photo } from '../types';
+import { Photo, PaginationInfo } from '../types';
 
 interface PhotoGalleryProps {
   photos: Photo[];
+  pagination: PaginationInfo;
+  loading: boolean;
+  error: string | null;
+  onLoadMore: () => void;
   isGrandad?: boolean;
 }
 
-export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, isGrandad = false }) => {
+export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ 
+  photos, 
+  pagination, 
+  loading, 
+  error, 
+  onLoadMore, 
+  isGrandad = false 
+}) => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
+  
+  const lastPhotoElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && pagination.hasNext) {
+        onLoadMore();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, pagination.hasNext, onLoadMore]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -45,39 +68,71 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, isGrandad = 
         </h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {photos.map((photo) => (
-            <div
-              key={photo.id}
-              className="group relative bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => setSelectedPhoto(photo)}
-            >
-              <div className="aspect-square">
-                <img
-                  src={photo.thumbnailUrl || photo.url}
-                  alt={photo.description}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              <div className="p-3">
-                <p className="text-sm text-gray-900 line-clamp-2 mb-2">
-                  {photo.description}
-                </p>
+          {photos.map((photo, index) => {
+            const isLast = index === photos.length - 1;
+            return (
+              <div
+                key={photo.id}
+                ref={isLast ? lastPhotoElementRef : null}
+                className="group relative bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => setSelectedPhoto(photo)}
+              >
+                <div className="aspect-square">
+                  <img
+                    src={photo.thumbnailUrl || photo.url}
+                    alt={photo.description}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
                 
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <UserIcon className="h-3 w-3" />
-                    <span>{photo.uploadedBy}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <CalendarIcon className="h-3 w-3" />
-                    <span>{formatDate(photo.uploadedAt)}</span>
+                <div className="p-3">
+                  <p className="text-sm text-gray-900 line-clamp-2 mb-2">
+                    {photo.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center space-x-1">
+                      <UserIcon className="h-3 w-3" />
+                      <span>{photo.uploadedBy}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <CalendarIcon className="h-3 w-3" />
+                      <span>{formatDate(photo.uploadedAt)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+        
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+        
+        {/* Error message */}
+        {error && (
+          <div className="text-center py-8">
+            <div className="text-red-600 mb-2">{error}</div>
+            <button 
+              onClick={onLoadMore}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        
+        {/* End of results */}
+        {!loading && !error && !pagination.hasNext && photos.length > 0 && (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            You've reached the end of the gallery!
+          </div>
+        )}
       </div>
 
       {/* Photo Modal */}
