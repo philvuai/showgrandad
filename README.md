@@ -8,6 +8,7 @@ A password-protected family photo sharing website built for grandad, so the whol
 - **Grandad-Friendly**: Simple PIN login with large buttons and view-only interface
 - **Family Upload**: Full photo upload functionality with descriptions
 - **Cross-Device Sync**: Photos sync across all devices and family members
+- **Concurrent Upload Support**: Multiple family members can upload photos simultaneously
 - **Password Protection**: Secure authentication for both user types
 - **Gallery View**: Beautiful responsive gallery to browse all family photos
 - **Mobile Friendly**: Works great on phones, tablets, and desktops
@@ -118,6 +119,21 @@ The app automatically uses **Netlify Blobs** for persistent storage when deploye
 - Family members can upload photos from any device
 - Grandad will see all photos from all family members
 - Photos are automatically synced across phones, tablets, and computers
+- Multiple family members can upload photos simultaneously without conflicts
+
+## Concurrent Upload Support
+
+The app is designed to handle multiple family members uploading photos at the same time:
+
+- **Unique Photo IDs**: Each photo gets a unique UUID (Universally Unique Identifier) to prevent conflicts
+- **Atomic Operations**: Photo uploads are processed as single atomic operations to prevent data corruption
+- **Netlify Blobs**: The storage backend is designed for concurrent access
+- **Safe List Management**: Photo list updates are handled safely even with simultaneous uploads
+
+**What this means for your family:**
+- Multiple people can upload photos during family gatherings without issues
+- No risk of photos being overwritten or lost due to timing conflicts
+- Smooth experience even if everyone uploads photos at the same time
 
 ## Security Note
 

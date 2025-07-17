@@ -1,4 +1,5 @@
 import { Photo, PhotoUpload, PhotosResponse } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 const API_BASE = '/.netlify/functions';
 
@@ -69,7 +70,7 @@ export const api = {
         }
         
         const newPhoto: Photo = {
-          id: Date.now().toString(),
+          id: uuidv4(),
           filename: upload.file.name,
           description: upload.description,
           uploadedAt: new Date().toISOString(),
