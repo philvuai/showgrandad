@@ -81,8 +81,14 @@ const processFileForUpload = async (
 };
 
 export const api = {
-  async getPhotos(page: number = 1, limit: number = 50): Promise<PhotosResponse> {
-    const response = await fetch(`${API_BASE}/photos?page=${page}&limit=${limit}`);
+  async getPhotos(page: number = 1, limit: number = 50, thumbnailsOnly: boolean = false): Promise<PhotosResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      thumbnailsOnly: thumbnailsOnly.toString()
+    });
+    
+    const response = await fetch(`${API_BASE}/photos?${params}`);
     if (!response.ok) {
       throw new Error('Failed to fetch photos');
     }

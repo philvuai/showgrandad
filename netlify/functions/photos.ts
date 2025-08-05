@@ -70,6 +70,7 @@ export const handler: Handler = async (event, context) => {
       const page = parseInt(queryParams.page || '1', 10);
       const limit = parseInt(queryParams.limit || '50', 10);
       const includeImages = queryParams.includeImages === 'true';
+      const thumbnailsOnly = queryParams.thumbnailsOnly === 'true';
       
       try {
         const store = getPhotoStore();
@@ -81,14 +82,34 @@ export const handler: Handler = async (event, context) => {
         const endIndex = startIndex + limit;
         const paginatedPhotos = allPhotos.slice(startIndex, endIndex);
         
-        // If not including images, remove the image data to reduce payload
-        const responsePhotos = includeImages ? paginatedPhotos : paginatedPhotos.map((photo: any) => ({
-          ...photo,
-          url: getPhotoUrl(photo.id),
-          thumbnailUrl: getPhotoUrl(photo.id) + '?thumbnail=true',
-          // Remove the base64 data to reduce payload size
-          imageData: undefined
-        }));
+        // Optimize response based on request type
+        let responsePhotos;
+        
+        if (thumbnailsOnly) {
+          // For fast initial loading, only include thumbnails and metadata
+          responsePhotos = paginatedPhotos.map((photo: any) => ({
+            id: photo.id,
+            filename: photo.filename,
+            description: photo.description,
+            uploadedAt: photo.uploadedAt,
+            uploadedBy: photo.uploadedBy,
+            thumbnailUrl: photo.thumbnailUrl,
+            // Don't include full-size image URL to prevent accidental loading
+            url: undefined
+          }));
+        } else if (includeImages) {
+          // Include all image data
+          responsePhotos = paginatedPhotos;
+        } else {
+          // Standard response with URLs but no base64 data
+          responsePhotos = paginatedPhotos.map((photo: any) => ({
+            ...photo,
+            url: getPhotoUrl(photo.id),
+            thumbnailUrl: getPhotoUrl(photo.id) + '?thumbnail=true',
+            // Remove the base64 data to reduce payload size
+            imageData: undefined
+          }));
+        }
         
         console.log(`Retrieved page ${page} with ${responsePhotos.length} photos from Netlify Blobs`);
         
