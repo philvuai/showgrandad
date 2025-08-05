@@ -72,6 +72,8 @@ export const handler: Handler = async (event, context) => {
       const includeImages = queryParams.includeImages === 'true';
       const thumbnailsOnly = queryParams.thumbnailsOnly === 'true';
       
+      console.log('GET request params:', { page, limit, includeImages, thumbnailsOnly });
+      
       try {
         const store = getPhotoStore();
         const photosData = await store.get(PHOTOS_KEY);
@@ -93,9 +95,8 @@ export const handler: Handler = async (event, context) => {
             description: photo.description,
             uploadedAt: photo.uploadedAt,
             uploadedBy: photo.uploadedBy,
-            thumbnailUrl: photo.thumbnailUrl,
+            thumbnailUrl: photo.thumbnailUrl
             // Don't include full-size image URL to prevent accidental loading
-            url: undefined
           }));
         } else if (includeImages) {
           // Include all image data
