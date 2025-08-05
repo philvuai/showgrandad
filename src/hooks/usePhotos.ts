@@ -15,12 +15,12 @@ export const usePhotos = (initialPage: number = 1, limit: number = 20) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadPhotos = useCallback(async (page: number = 1, append: boolean = false, thumbnailsOnly: boolean = false) => {
+  const loadPhotos = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response: PhotosResponse = await api.getPhotos(page, limit, thumbnailsOnly);
+      const response: PhotosResponse = await api.getPhotos(page, limit);
       
       if (append) {
         setPhotos(prev => [...prev, ...response.photos]);
@@ -46,29 +46,6 @@ export const usePhotos = (initialPage: number = 1, limit: number = 20) => {
     loadPhotos(1, false);
   }, [loadPhotos]);
 
-  // Fast initial load with thumbnails only
-  const loadThumbnails = useCallback(() => {
-    loadPhotos(1, false, true);
-  }, [loadPhotos]);
-
-  // Load full images for existing photos
-  const loadFullImages = useCallback(async () => {
-    if (photos.length === 0) return;
-    
-    try {
-      const response: PhotosResponse = await api.getPhotos(1, limit, false);
-      
-      // Merge full image data with existing thumbnail data
-      setPhotos(prevPhotos => {
-        return prevPhotos.map(photo => {
-          const fullPhoto = response.photos.find(p => p.id === photo.id);
-          return fullPhoto ? { ...photo, url: fullPhoto.url } : photo;
-        });
-      });
-    } catch (err) {
-      console.warn('Failed to load full images:', err);
-    }
-  }, [photos.length, limit]);
 
   const addPhoto = useCallback((newPhoto: Photo) => {
     setPhotos(prev => [newPhoto, ...prev]);
@@ -97,8 +74,6 @@ export const usePhotos = (initialPage: number = 1, limit: number = 20) => {
     error,
     loadMore,
     refresh,
-    loadThumbnails,
-    loadFullImages,
     addPhoto,
     addMultiplePhotos,
   };

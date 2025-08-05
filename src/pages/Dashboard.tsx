@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Header } from '../components/Header';
 import { PhotoUpload } from '../components/PhotoUpload';
 import PhotoGallery from '../components/PhotoGallery';
@@ -13,19 +13,18 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const { photos, pagination, loading, error, loadMore, addPhoto, addMultiplePhotos, loadThumbnails, loadFullImages } = usePhotos();
+  const { photos, pagination, loading, error, loadMore, addPhoto, addMultiplePhotos } = usePhotos();
 
-  // Load thumbnails quickly on first render
-  useEffect(() => {
-    loadThumbnails();
-  }, [loadThumbnails]);
+  // Disabled thumbnail-first loading due to 502 errors
+  // useEffect(() => {
+  //   loadThumbnails();
+  // }, [loadThumbnails]);
 
-  // Lazy load full-size images afterwards
-  useEffect(() => {
-    if (!loading) {
-      loadFullImages();
-    }
-  }, [loading, loadFullImages]);
+  // useEffect(() => {
+  //   if (!loading) {
+  //     loadFullImages();
+  //   }
+  // }, [loading, loadFullImages]);
 
   const handlePhotoUpload = async (upload: PhotoUploadType) => {
     setIsUploading(true);
