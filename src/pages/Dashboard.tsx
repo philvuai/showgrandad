@@ -34,10 +34,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     
     try {
       const uploadedPhotos = await api.uploadMultiplePhotos(uploads, user.username);
-      addMultiplePhotos(uploadedPhotos);
+      
+      // Add successful photos to the gallery
+      if (uploadedPhotos.length > 0) {
+        addMultiplePhotos(uploadedPhotos);
+      }
+      
+      // Show appropriate message based on success/failure ratio
+      if (uploadedPhotos.length === uploads.files.length) {
+        console.log(`✅ Successfully uploaded all ${uploadedPhotos.length} photos`);
+      } else if (uploadedPhotos.length > 0) {
+        const failedCount = uploads.files.length - uploadedPhotos.length;
+        console.warn(`⚠️ Partial success: Uploaded ${uploadedPhotos.length} photos, ${failedCount} failed`);
+        alert(`Partial success: ${uploadedPhotos.length} photos uploaded successfully, ${failedCount} failed. Check the console for details.`);
+      }
     } catch (error) {
-      console.error('Error uploading photos:', error);
-      // TODO: Add user-friendly error handling
+      console.error('❌ Complete upload failure:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to upload photos: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }

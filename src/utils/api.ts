@@ -99,17 +99,46 @@ export const api = {
     // Process all files concurrently with limited concurrency to avoid overwhelming the browser
     const concurrencyLimit = 3;
     const results: Photo[] = [];
+    const errors: Array<{ filename: string; error: string }> = [];
     
     for (let i = 0; i < files.length; i += concurrencyLimit) {
       const batch = files.slice(i, i + concurrencyLimit);
-      const batchPromises = batch.map((file, batchIndex) => {
+      const batchPromises = batch.map(async (file, batchIndex) => {
         const globalIndex = i + batchIndex;
         const description = descriptions[globalIndex] || '';
-        return processFileForUpload(file, description, username);
+        
+        try {
+          return await processFileForUpload(file, description, username);
+        } catch (error) {
+          // Log the error but don't fail the entire batch
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          errors.push({ filename: file.name, error: errorMessage });
+          console.error(`Failed to upload ${file.name}:`, errorMessage);
+          return null; // Return null for failed uploads
+        }
       });
       
+      // Use Promise.allSettled to handle partial failures
       const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
+      
+      // Filter out null values (failed uploads) and add successful ones
+      const successfulUploads = batchResults.filter((result): result is Photo => result !== null);
+      results.push(...successfulUploads);
+    }
+    
+    // Log any errors that occurred, but don't throw if we have some successful uploads
+    if (errors.length > 0) {
+      console.warn(`${errors.length} out of ${files.length} photos failed to upload:`, errors);
+      
+      // If ALL uploads failed, throw an error
+      if (results.length === 0) {
+        const failedFiles = errors.map(e => `${e.filename}: ${e.error}`).join('; ');
+        throw new Error(`All uploads failed: ${failedFiles}`);
+      }
+      
+      // If some succeeded and some failed, log the details but don't throw
+      // The caller can check results.length vs files.length to detect partial failures
+      console.info(`Partial upload success: ${results.length}/${files.length} photos uploaded successfully`);
     }
     
     return results;
