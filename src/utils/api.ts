@@ -1,44 +1,83 @@
 import { Photo, PhotoUpload, MultiPhotoUpload, PhotosResponse } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { processImage, generateThumbnail, validateImageFile, supportsWebP } from './imageProcessor';
 
 const API_BASE = '/.netlify/functions';
 
-// Helper function to compress images
-const compressImage = (base64: string, quality: number = 0.8): Promise<string> => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
+// Cache for processed images to avoid reprocessing
+const imageCache = new Map<string, { full: string; thumbnail: string }>();
+
+// Constants
+const BASE64_SIZE_THRESHOLD = 2 * 1024 * 1024; // 2MB
+
+/**
+ * Process a single file for upload
+ */
+const processFileForUpload = async (
+  file: File,
+  description: string,
+  username: string
+): Promise<Photo> => {
+  // Validate file
+  const validation = validateImageFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
+  // Check cache first
+  const cacheKey = `${file.name}-${file.size}-${file.lastModified}`;
+  let processedImages = imageCache.get(cacheKey);
+
+  if (!processedImages) {
+    const reader = new FileReader();
+    const base64 = await new Promise<string>((resolve, reject) => {
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+      reader.readAsDataURL(file);
+    });
+
+    // Process image with optimized compression
+    const shouldCompress = base64.length > BASE64_SIZE_THRESHOLD;
+    const format = supportsWebP() ? 'webp' : 'jpeg';
     
-    img.onload = () => {
-      // Calculate new dimensions (max 1200px on the longest side)
-      const maxSize = 1200;
-      let { width, height } = img;
-      
-      if (width > height) {
-        if (width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
-        }
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      // Convert to JPEG with specified quality
-      const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-      resolve(compressedBase64);
-    };
-    
-    img.src = base64;
+    const [fullImage, thumbnail] = await Promise.all([
+      shouldCompress ? processImage(base64, { format }) : base64,
+      generateThumbnail(base64)
+    ]);
+
+    processedImages = { full: fullImage, thumbnail };
+    imageCache.set(cacheKey, processedImages);
+  }
+
+  const newPhoto: Photo = {
+    id: uuidv4(),
+    filename: file.name,
+    description,
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: username,
+    url: processedImages.full,
+    thumbnailUrl: processedImages.thumbnail,
+  };
+
+  // Upload to server
+  const response = await fetch(`${API_BASE}/photos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ photo: newPhoto, action: 'upload' }),
   });
+
+  if (!response.ok) {
+    let errorMessage = `Failed to upload ${file.name}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch (e) {
+      // Use default message if parsing fails
+    }
+    throw new Error(`${errorMessage} (${response.status})`);
+  }
+
+  return newPhoto;
 };
 
 export const api = {
@@ -51,139 +90,28 @@ export const api = {
   },
 
   async uploadPhoto(upload: PhotoUpload, username: string): Promise<Photo> {
-    return new Promise((resolve, reject) => {
-      // Check file size (limit to 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-      if (upload.file.size > maxSize) {
-        reject(new Error('File size too large. Please use an image smaller than 5MB.'));
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const imageUrl = e.target?.result as string;
-        
-        // Create a compressed version if the image is too large
-        let processedImageUrl = imageUrl;
-        if (imageUrl.length > 2 * 1024 * 1024) { // If base64 is > 2MB
-          processedImageUrl = await compressImage(imageUrl, 0.8);
-        }
-        
-        const newPhoto: Photo = {
-          id: uuidv4(),
-          filename: upload.file.name,
-          description: upload.description,
-          uploadedAt: new Date().toISOString(),
-          uploadedBy: username,
-          url: processedImageUrl,
-          thumbnailUrl: processedImageUrl,
-        };
-
-        try {
-          const response = await fetch(`${API_BASE}/photos`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ photo: newPhoto, action: 'upload' }),
-          });
-
-          if (response.ok) {
-            resolve(newPhoto);
-          } else {
-            let errorMessage = 'Failed to upload photo';
-            try {
-              const errorData = await response.json();
-              errorMessage = errorData.error || errorMessage;
-            } catch (e) {
-              // If we can't parse error response, use default message
-            }
-            throw new Error(`${errorMessage} (${response.status})`);
-          }
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(upload.file);
-    });
+    return processFileForUpload(upload.file, upload.description, username);
   },
 
   async uploadMultiplePhotos(uploads: MultiPhotoUpload, username: string): Promise<Photo[]> {
     const { files, descriptions } = uploads;
-    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
     
-    // Validate all files first
-    for (const file of files) {
-      if (file.size > maxSize) {
-        throw new Error(`File "${file.name}" is too large. Please use images smaller than 5MB.`);
-      }
-    }
+    // Process all files concurrently with limited concurrency to avoid overwhelming the browser
+    const concurrencyLimit = 3;
+    const results: Photo[] = [];
     
-    const uploadPromises = files.map(async (file, index) => {
-      const description = descriptions[index] || '';
-      
-      return new Promise<Photo>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const imageUrl = e.target?.result as string;
-          
-          // Create a compressed version if the image is too large
-          let processedImageUrl = imageUrl;
-          if (imageUrl.length > 2 * 1024 * 1024) { // If base64 is > 2MB
-            processedImageUrl = await compressImage(imageUrl, 0.8);
-          }
-          
-          const newPhoto: Photo = {
-            id: uuidv4(),
-            filename: file.name,
-            description,
-            uploadedAt: new Date().toISOString(),
-            uploadedBy: username,
-            url: processedImageUrl,
-            thumbnailUrl: processedImageUrl,
-          };
-
-          try {
-            const response = await fetch(`${API_BASE}/photos`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ photo: newPhoto, action: 'upload' }),
-            });
-
-            if (response.ok) {
-              resolve(newPhoto);
-            } else {
-              let errorMessage = `Failed to upload ${file.name}`;
-              try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-              } catch (e) {
-                // If we can't parse error response, use default message
-              }
-              throw new Error(`${errorMessage} (${response.status})`);
-            }
-          } catch (error) {
-            reject(error);
-          }
-        };
-
-        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
-        reader.readAsDataURL(file);
+    for (let i = 0; i < files.length; i += concurrencyLimit) {
+      const batch = files.slice(i, i + concurrencyLimit);
+      const batchPromises = batch.map((file, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        const description = descriptions[globalIndex] || '';
+        return processFileForUpload(file, description, username);
       });
-    });
-    
-    // Wait for all uploads to complete
-    try {
-      const uploadedPhotos = await Promise.all(uploadPromises);
-      return uploadedPhotos;
-    } catch (error) {
-      // If any upload fails, we still return the successful ones
-      // and let the UI handle the error display
-      throw error;
+      
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
     }
+    
+    return results;
   },
 };

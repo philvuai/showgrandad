@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { CalendarIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Photo, PaginationInfo } from '../types';
 
@@ -11,7 +11,7 @@ interface PhotoGalleryProps {
   isGrandad?: boolean;
 }
 
-export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ 
+const PhotoGallery: React.FC<PhotoGalleryProps> = ({ 
   photos, 
   pagination, 
   loading, 
@@ -33,13 +33,15 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     if (node) observer.current.observe(node);
   }, [loading, pagination.hasNext, onLoadMore]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  // Memoize date formatter for performance
+  const formatDate = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
-  };
+    return (dateString: string) => formatter.format(new Date(dateString));
+  }, []);
 
   if (photos.length === 0) {
     return (
@@ -179,3 +181,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     </>
   );
 };
+
+// Memoize component to prevent unnecessary re-renders
+export default memo(PhotoGallery);

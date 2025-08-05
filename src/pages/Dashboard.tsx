@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Header } from '../components/Header';
 import { PhotoUpload } from '../components/PhotoUpload';
-import { PhotoGallery } from '../components/PhotoGallery';
+import PhotoGallery from '../components/PhotoGallery';
 import { PhotoUpload as PhotoUploadType, MultiPhotoUpload, User } from '../types';
 import { usePhotos } from '../hooks/usePhotos';
 import { api } from '../utils/api';
@@ -11,7 +11,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [isUploading, setIsUploading] = useState(false);
   const { photos, pagination, loading, error, loadMore, addPhoto, addMultiplePhotos } = usePhotos();
 
@@ -81,3 +81,5 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     </div>
   );
 };
+
+export default Dashboard;
