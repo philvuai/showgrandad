@@ -4,9 +4,9 @@
 The application has been optimized for faster photo loading with better performance as more photos are added. Here are the key improvements implemented:
 
 ## 1. Pagination System
-- **API Pagination**: Photos are now loaded in pages of 12 (configurable)
+- **API Pagination**: Photos are now loaded in pages of 50 (configurable)
 - **Infinite Scroll**: New photos load automatically as you scroll down
-- **Reduced Initial Load**: Only the first 12 photos load initially
+- **Reduced Initial Load**: Only the first 50 photos load initially
 - **Memory Efficiency**: Older photos remain in memory but new ones are loaded on demand
 
 ## 2. CDN-Ready Photo Serving
@@ -33,7 +33,7 @@ The application has been optimized for faster photo loading with better performa
 - **Error Boundaries**: Graceful error handling throughout the app
 
 ## Performance Benefits
-- **Faster Initial Load**: Only 12 photos load initially vs all photos
+- **Faster Initial Load**: Only 50 photos load initially vs all photos
 - **Better Scalability**: Performance doesn't degrade with hundreds of photos
 - **Reduced Bandwidth**: Thumbnails and CDN caching reduce data transfer
 - **Improved UX**: Smoother scrolling and loading experience
@@ -46,7 +46,7 @@ The application has been optimized for faster photo loading with better performa
 
 ## Configuration
 The pagination system is configurable:
-- Default page size: 12 photos
+- Default page size: 50 photos
 - Can be adjusted in `usePhotos` hook
 - Infinite scroll threshold can be modified in `PhotoGallery` component
 

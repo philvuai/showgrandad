@@ -42,7 +42,7 @@ const compressImage = (base64: string, quality: number = 0.8): Promise<string> =
 };
 
 export const api = {
-  async getPhotos(page: number = 1, limit: number = 12): Promise<PhotosResponse> {
+  async getPhotos(page: number = 1, limit: number = 50): Promise<PhotosResponse> {
     const response = await fetch(`${API_BASE}/photos?page=${page}&limit=${limit}`);
     if (!response.ok) {
       throw new Error('Failed to fetch photos');

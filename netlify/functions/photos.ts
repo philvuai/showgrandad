@@ -68,7 +68,7 @@ export const handler: Handler = async (event, context) => {
       // Get photos with pagination
       const queryParams = event.queryStringParameters || {};
       const page = parseInt(queryParams.page || '1', 10);
-      const limit = parseInt(queryParams.limit || '12', 10);
+      const limit = parseInt(queryParams.limit || '50', 10);
       const includeImages = queryParams.includeImages === 'true';
       
       try {

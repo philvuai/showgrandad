@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Photo, PhotosResponse, PaginationInfo } from '../types';
 import { api } from '../utils/api';
 
-export const usePhotos = (initialPage: number = 1, limit: number = 12) => {
+export const usePhotos = (initialPage: number = 1, limit: number = 50) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: initialPage,
