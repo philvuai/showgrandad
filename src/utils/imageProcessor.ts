@@ -9,18 +9,32 @@ interface ImageProcessingOptions {
   format: 'jpeg' | 'webp';
 }
 
+/**
+ * Check if browser supports WebP
+ */
+export const supportsWebP = (): boolean => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  } catch {
+    return false;
+  }
+};
+
 const DEFAULT_OPTIONS: ImageProcessingOptions = {
   maxWidth: 1200,
   maxHeight: 1200,
   quality: 0.8,
-  format: 'jpeg'
+  format: supportsWebP() ? 'webp' : 'jpeg'
 };
 
 const THUMBNAIL_OPTIONS: ImageProcessingOptions = {
   maxWidth: 300,
   maxHeight: 300,
   quality: 0.7,
-  format: 'jpeg'
+  format: supportsWebP() ? 'webp' : 'jpeg'
 };
 
 /**
@@ -108,15 +122,6 @@ function calculateDimensions(
   return { width: Math.round(width), height: Math.round(height) };
 }
 
-/**
- * Check if browser supports WebP
- */
-export const supportsWebP = (): boolean => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1;
-  canvas.height = 1;
-  return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
-};
 
 /**
  * Validate image file

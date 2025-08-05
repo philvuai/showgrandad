@@ -5,6 +5,7 @@ import PhotoGallery from '../components/PhotoGallery';
 import { PhotoUpload as PhotoUploadType, MultiPhotoUpload, User } from '../types';
 import { usePhotos } from '../hooks/usePhotos';
 import { api } from '../utils/api';
+import { useToast } from '../hooks/useToast';
 
 interface DashboardProps {
   user: User;
@@ -14,6 +15,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [isUploading, setIsUploading] = useState(false);
   const { photos, pagination, loading, error, loadMore, addPhoto, addMultiplePhotos } = usePhotos();
+  const { showSuccess, showError, showWarning } = useToast();
 
   // Disabled thumbnail-first loading due to 502 errors
   // useEffect(() => {
@@ -32,9 +34,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     try {
       const uploadedPhoto = await api.uploadPhoto(upload, user.username);
       addPhoto(uploadedPhoto);
+      showSuccess('Photo uploaded!', 'Your photo has been shared successfully.');
     } catch (error) {
       console.error('Error uploading photo:', error);
-      // TODO: Add user-friendly error handling
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload photo';
+      showError('Upload failed', errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -53,16 +57,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       
       // Show appropriate message based on success/failure ratio
       if (uploadedPhotos.length === uploads.files.length) {
-        console.log(`✅ Successfully uploaded all ${uploadedPhotos.length} photos`);
+        showSuccess('All photos uploaded!', `Successfully uploaded ${uploadedPhotos.length} photos.`);
       } else if (uploadedPhotos.length > 0) {
         const failedCount = uploads.files.length - uploadedPhotos.length;
-        console.warn(`⚠️ Partial success: Uploaded ${uploadedPhotos.length} photos, ${failedCount} failed`);
-        alert(`Partial success: ${uploadedPhotos.length} photos uploaded successfully, ${failedCount} failed. Check the console for details.`);
+        showWarning(
+          'Partial upload success', 
+          `${uploadedPhotos.length} photos uploaded, ${failedCount} failed. Check console for details.`
+        );
       }
     } catch (error) {
       console.error('❌ Complete upload failure:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to upload photos: ${errorMessage}`);
+      showError('Upload failed', `Failed to upload photos: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }

@@ -1,10 +1,14 @@
 import { useAuth } from './hooks/useAuth';
 import { LoginSelector } from './components/LoginSelector';
 import { lazy, Suspense } from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
+import ToastContainer from './components/Toast';
+import { useToast } from './hooks/useToast';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 
 function App() {
   const { user, isLoading, error, login, logout } = useAuth();
+  const { toasts, removeToast } = useToast();
 
   if (isLoading) {
     return (
@@ -21,7 +25,8 @@ function App() {
     return <LoginSelector onLogin={login} error={error} isLoading={isLoading} />;
   }
 
-    return (
+  return (
+    <ErrorBoundary>
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
@@ -32,7 +37,9 @@ function App() {
       }>
         <Dashboard user={user} onLogout={logout} />
       </Suspense>
-    );
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+    </ErrorBoundary>
+  );
 }
 
 export default App;

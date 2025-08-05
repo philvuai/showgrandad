@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { CalendarIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Photo, PaginationInfo } from '../types';
+import LazyImage from './LazyImage';
 
 interface PhotoGalleryProps {
   photos: Photo[];
@@ -80,11 +81,11 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 onClick={() => setSelectedPhoto(photo)}
               >
                 <div className="aspect-square">
-                  <img
-                    src={photo.thumbnailUrl || photo.url}
+                  <LazyImage
+                    src={photo.url}
+                    thumbnailSrc={photo.thumbnailUrl}
                     alt={photo.description}
                     className="w-full h-full object-cover"
-                    loading="lazy"
                   />
                 </div>
                 
