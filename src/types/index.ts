@@ -25,6 +25,11 @@ export interface PhotoUpload {
   description: string;
 }
 
+export interface MultiPhotoUpload {
+  files: File[];
+  descriptions: string[];
+}
+
 export interface PaginationInfo {
   page: number;
   limit: number;

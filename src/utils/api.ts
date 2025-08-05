@@ -1,4 +1,4 @@
-import { Photo, PhotoUpload, PhotosResponse } from '../types';
+import { Photo, PhotoUpload, MultiPhotoUpload, PhotosResponse } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 const API_BASE = '/.netlify/functions';
@@ -108,5 +108,82 @@ export const api = {
       reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(upload.file);
     });
+  },
+
+  async uploadMultiplePhotos(uploads: MultiPhotoUpload, username: string): Promise<Photo[]> {
+    const { files, descriptions } = uploads;
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    
+    // Validate all files first
+    for (const file of files) {
+      if (file.size > maxSize) {
+        throw new Error(`File "${file.name}" is too large. Please use images smaller than 5MB.`);
+      }
+    }
+    
+    const uploadPromises = files.map(async (file, index) => {
+      const description = descriptions[index] || '';
+      
+      return new Promise<Photo>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const imageUrl = e.target?.result as string;
+          
+          // Create a compressed version if the image is too large
+          let processedImageUrl = imageUrl;
+          if (imageUrl.length > 2 * 1024 * 1024) { // If base64 is > 2MB
+            processedImageUrl = await compressImage(imageUrl, 0.8);
+          }
+          
+          const newPhoto: Photo = {
+            id: uuidv4(),
+            filename: file.name,
+            description,
+            uploadedAt: new Date().toISOString(),
+            uploadedBy: username,
+            url: processedImageUrl,
+            thumbnailUrl: processedImageUrl,
+          };
+
+          try {
+            const response = await fetch(`${API_BASE}/photos`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ photo: newPhoto, action: 'upload' }),
+            });
+
+            if (response.ok) {
+              resolve(newPhoto);
+            } else {
+              let errorMessage = `Failed to upload ${file.name}`;
+              try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+              } catch (e) {
+                // If we can't parse error response, use default message
+              }
+              throw new Error(`${errorMessage} (${response.status})`);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+    });
+    
+    // Wait for all uploads to complete
+    try {
+      const uploadedPhotos = await Promise.all(uploadPromises);
+      return uploadedPhotos;
+    } catch (error) {
+      // If any upload fails, we still return the successful ones
+      // and let the UI handle the error display
+      throw error;
+    }
   },
 };

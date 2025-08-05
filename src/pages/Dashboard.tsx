@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Header } from '../components/Header';
 import { PhotoUpload } from '../components/PhotoUpload';
 import { PhotoGallery } from '../components/PhotoGallery';
-import { PhotoUpload as PhotoUploadType, User } from '../types';
+import { PhotoUpload as PhotoUploadType, MultiPhotoUpload, User } from '../types';
 import { usePhotos } from '../hooks/usePhotos';
 import { api } from '../utils/api';
 
@@ -13,7 +13,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const { photos, pagination, loading, error, loadMore, addPhoto } = usePhotos();
+  const { photos, pagination, loading, error, loadMore, addPhoto, addMultiplePhotos } = usePhotos();
 
   const handlePhotoUpload = async (upload: PhotoUploadType) => {
     setIsUploading(true);
@@ -23,6 +23,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       addPhoto(uploadedPhoto);
     } catch (error) {
       console.error('Error uploading photo:', error);
+      // TODO: Add user-friendly error handling
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleMultiPhotoUpload = async (uploads: MultiPhotoUpload) => {
+    setIsUploading(true);
+    
+    try {
+      const uploadedPhotos = await api.uploadMultiplePhotos(uploads, user.username);
+      addMultiplePhotos(uploadedPhotos);
+    } catch (error) {
+      console.error('Error uploading photos:', error);
+      // TODO: Add user-friendly error handling
     } finally {
       setIsUploading(false);
     }
@@ -46,7 +61,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           )}
           
           {!isGrandad && (
-            <PhotoUpload onUpload={handlePhotoUpload} isUploading={isUploading} />
+            <PhotoUpload 
+              onUpload={handlePhotoUpload} 
+              onMultiUpload={handleMultiPhotoUpload}
+              isUploading={isUploading} 
+            />
           )}
           
           <PhotoGallery 

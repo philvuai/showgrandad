@@ -54,6 +54,14 @@ export const usePhotos = (initialPage: number = 1, limit: number = 12) => {
     }));
   }, []);
 
+  const addMultiplePhotos = useCallback((newPhotos: Photo[]) => {
+    setPhotos(prev => [...newPhotos, ...prev]);
+    setPagination(prev => ({
+      ...prev,
+      total: prev.total + newPhotos.length,
+    }));
+  }, []);
+
   useEffect(() => {
     loadPhotos(initialPage);
   }, [loadPhotos, initialPage]);
@@ -66,5 +74,6 @@ export const usePhotos = (initialPage: number = 1, limit: number = 12) => {
     loadMore,
     refresh,
     addPhoto,
+    addMultiplePhotos,
   };
 };
